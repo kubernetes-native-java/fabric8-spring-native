@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.reflections.Reflections;
 import org.springframework.aot.context.bootstrap.generator.infrastructure.nativex.NativeConfigurationRegistry;
 import org.springframework.nativex.AotOptions;
+import org.springframework.nativex.hint.NativeHint;
 import org.springframework.nativex.hint.TypeAccess;
 import org.springframework.nativex.type.NativeConfiguration;
 import org.springframework.util.ReflectionUtils;
@@ -20,11 +21,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+
 /**
+	* Spring Native support for excellent Fabric8 Kubernetes client
+	*
 	* @author Josh Long
 	*/
-
 @Slf4j
+@NativeHint(options = {"-H:+AddAllCharsets", "--enable-https", "--enable-url-protocols=https"})
 public class Fabric8NativeConfiguration implements NativeConfiguration {
 
 	private final Class<?> clazz = NamedCluster.class;
@@ -45,9 +49,12 @@ public class Fabric8NativeConfiguration implements NativeConfiguration {
 			.stream()
 			.filter(Objects::nonNull)
 			.forEach(c -> {
-				log.info("trying to register " + c.getName() + " for reflection");
+				if (log.isDebugEnabled()) {
+					log.debug("trying to register " + c.getName() + " for reflection");
+				}
 				registry.reflection().forType(c).withAccess(TypeAccess.values()).build();
 			});
+
 	}
 
 	@SneakyThrows
@@ -55,7 +62,11 @@ public class Fabric8NativeConfiguration implements NativeConfiguration {
 		var method = annotationClazz.getMethod("using");
 		var classes = this.reflections.getTypesAnnotatedWith(annotationClazz);
 		return classes.stream().map(clazzWithAnnotation -> {
-			log.info("found " + clazzWithAnnotation.getName() + " : " + annotationClazz.getName());
+
+			if (log.isDebugEnabled()) {
+				log.debug("found " + clazzWithAnnotation.getName() + " : " + annotationClazz.getName());
+			}
+
 			var annotation = clazzWithAnnotation.getAnnotation(annotationClazz);
 			try {
 				if (annotation != null) {
