@@ -7,10 +7,12 @@ import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.ContextStoppedEvent;
 
 import java.util.Objects;
 
@@ -28,11 +30,9 @@ import java.util.Objects;
 @SpringBootApplication
 public class Fabric8NativeApplication {
 
-
 	public static void main(String[] args) {
 		SpringApplication.run(Fabric8NativeApplication.class, args);
 	}
-
 
 	@Bean
 	KubernetesClient kubernetesClient() {
@@ -40,9 +40,9 @@ public class Fabric8NativeApplication {
 	}
 
 	@Bean
-	ApplicationRunner runner(KubernetesClient client,
-																										SharedInformerFactory sharedInformerFactory,
-																										ResourceEventHandler<Node> nodeEventHandler) {
+	ApplicationListener<ApplicationReadyEvent> start(KubernetesClient client,
+																																																		SharedInformerFactory sharedInformerFactory,
+																																																		ResourceEventHandler<Node> nodeEventHandler) {
 		return args -> {
 			client.nodes().list(new ListOptionsBuilder().withLimit(1L).build());
 			sharedInformerFactory.startAllRegisteredInformers();
@@ -51,6 +51,10 @@ public class Fabric8NativeApplication {
 		};
 	}
 
+	@Bean
+	ApplicationListener<ContextStoppedEvent> stop(SharedInformerFactory sharedInformerFactory) {
+		return event -> sharedInformerFactory.stopAllRegisteredInformers(true);
+	}
 
 	@Bean
 	SharedInformerFactory sharedInformerFactory(KubernetesClient client) {
@@ -67,17 +71,12 @@ public class Fabric8NativeApplication {
 		return factory.sharedIndexInformerFor(Pod.class, PodList.class, 0);
 	}
 
-	//todo use @EventListeners for startup/shutdown events like in og blog
-
 	@Bean
-	ResourceEventHandler<Node> nodeReconciler(SharedIndexInformer<Node> nodeInformer, SharedIndexInformer<Pod> podInformer) {
+	ResourceEventHandler<Node> nodeReconciler(SharedIndexInformer<Pod> podInformer) {
 		return new ResourceEventHandler<>() {
 
 			@Override
 			public void onAdd(Node node) {
-				// n.b. This is executed in the Watcher's WebSocket Thread
-				// Ideally this should be executed by a Processor running in a dedicated thread
-				// This method should only add an item to the Processor's queue.
 				log.info("node: " + Objects.requireNonNull(node.getMetadata()).getName());
 				podInformer.getIndexer().list().stream()
 					.map(pod -> Objects.requireNonNull(pod.getMetadata()).getName())

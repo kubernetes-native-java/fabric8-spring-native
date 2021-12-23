@@ -57,7 +57,7 @@ public class Fabric8NativeConfiguration implements NativeConfiguration {
 	}
 
 	@SneakyThrows
-	<R extends Annotation> Set<Class<?>> resolveSerializationClasses(Class<R> annotationClazz) {
+	private <R extends Annotation> Set<Class<?>> resolveSerializationClasses(Class<R> annotationClazz) {
 		var method = annotationClazz.getMethod("using");
 		var classes = this.reflections.getTypesAnnotatedWith(annotationClazz);
 		return classes.stream().map(clazzWithAnnotation -> {
