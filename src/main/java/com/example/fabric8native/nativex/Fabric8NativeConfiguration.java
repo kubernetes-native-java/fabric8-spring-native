@@ -54,7 +54,6 @@ public class Fabric8NativeConfiguration implements NativeConfiguration {
 				}
 				registry.reflection().forType(c).withAccess(TypeAccess.values()).build();
 			});
-
 	}
 
 	@SneakyThrows
