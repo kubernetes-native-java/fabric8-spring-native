@@ -80,7 +80,7 @@ public class Fabric8NativeApplication {
 				log.info("node: " + Objects.requireNonNull(node.getMetadata()).getName());
 				podInformer.getIndexer().list().stream()
 					.map(pod -> Objects.requireNonNull(pod.getMetadata()).getName())
-					.forEach(podName -> log.info("pod name:" + podName));
+					.forEach(podName -> log.info("\tpod:" + podName));
 			}
 
 			@Override
