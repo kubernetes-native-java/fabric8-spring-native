@@ -18,9 +18,7 @@ import java.util.Objects;
 
 /**
 	* This example uses <a href="https://developers.redhat.com/blog/2020/05/20/getting-started-with-the-fabric8-kubernetes-java-client#using_fabric8_with_kubernetes">
-	* the Red Hat Fabric8 Kubernetes client</a>.
-	* <p>
-	* The example is inspired by <a href="https://blog.marcnuri.com/fabric8-kubernetes-java-client-and-quarkus-and-graalvm">this blog</a>,
+	* the Red Hat Fabric8 Kubernetes client</a>. The example is inspired by <a href="https://blog.marcnuri.com/fabric8-kubernetes-java-client-and-quarkus-and-graalvm">this blog</a>,
 	* which in turn was inspired by a blog I did.
 	*
 	* @author Josh Long
