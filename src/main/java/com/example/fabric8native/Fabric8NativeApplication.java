@@ -1,6 +1,7 @@
 package com.example.fabric8native;
 
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
@@ -46,6 +47,34 @@ public class Fabric8NativeApplication {
 			sharedInformerFactory.startAllRegisteredInformers();
 			var nodeHandler = sharedInformerFactory.getExistingSharedIndexInformer(Node.class);
 			nodeHandler.addEventHandler(nodeEventHandler);
+
+			// @formatter:off
+			var deployment = new DeploymentBuilder()
+				.withNewMetadata()//
+					.withName("nginx-deployment")
+					.addToLabels("app", "nginx")
+				.endMetadata()
+				.withNewSpec()
+					.withReplicas(1)
+					.withNewSelector()
+						.addToMatchLabels("app", "nginx")
+				.endSelector()
+				.withNewTemplate()
+					.withNewMetadata()
+						.addToLabels("app", "nginx")
+					.endMetadata()
+					.withNewSpec()
+						.addNewContainer()
+							.withName("nginx")
+							.withImage("nginx:1.7.9")
+							.addNewPort().withContainerPort(80).endPort()
+						.endContainer()
+					.endSpec()
+				.endTemplate()
+				.endSpec()
+				.build();
+			// @formatter:on
+			client.apps().deployments().inNamespace("default").createOrReplace(deployment);
 		};
 	}
 
