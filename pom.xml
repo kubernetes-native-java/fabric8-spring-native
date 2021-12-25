@@ -7,7 +7,7 @@
         <groupId>io.kubernetesnativejava</groupId>
         <artifactId>nativex-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
-        <relativePath />
+        <relativePath/>
     </parent>
     <packaging>jar</packaging>
     <artifactId>fabric8-spring-native</artifactId>
@@ -63,7 +63,7 @@
                     </execution>
                 </executions>
             </plugin>
-<!--            -->
+            <!--            -->
             <plugin>
                 <groupId>org.jfrog.buildinfo</groupId>
                 <artifactId>artifactory-maven-plugin</artifactId>
@@ -103,16 +103,11 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
                     <classifier>${repackage.classifier}</classifier>
                     <image>
                         <builder>paketobuildpacks/builder:tiny</builder>
@@ -122,6 +117,8 @@
                     </image>
                 </configuration>
             </plugin>
+
+
         </plugins>
 
 
@@ -168,5 +165,49 @@
             </url>
         </pluginRepository>
     </pluginRepositories>
+
+    <profiles>
+        <profile>
+            <id>native</id>
+            <properties>
+                <repackage.classifier>exec</repackage.classifier>
+                <native-buildtools.version>0.9.9</native-buildtools.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.junit.platform</groupId>
+                    <artifactId>junit-platform-launcher</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${native-buildtools.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>test-native</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>build-native</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <!--  -->
 </project>
