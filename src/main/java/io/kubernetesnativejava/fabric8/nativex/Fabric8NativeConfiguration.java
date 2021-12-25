@@ -23,7 +23,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Spring Native support for excellent Fabric8 Kubernetes client
+ * Spring Native support for excellent <a href="https://fabric8.io/"> Fabric8 Kubernetes
+ * client</a>.
  *
  * @author Josh Long
  */

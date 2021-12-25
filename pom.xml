@@ -12,8 +12,6 @@
     <artifactId>fabric8-spring-native</artifactId>
     <properties>
         <java.version>17</java.version>
-        <repackage.classifier/>
-        <spring-native.version>0.11.1</spring-native.version>
     </properties>
     <dependencies>
         <dependency>
