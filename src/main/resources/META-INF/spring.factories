@@ -1,1 +1,1 @@
-org.springframework.nativex.type.NativeConfiguration=com.example.fabric8native.nativex.Fabric8NativeConfiguration
+org.springframework.nativex.type.NativeConfiguration=io.kubernetesnativejava.fabric8.nativex.Fabric8NativeConfiguration

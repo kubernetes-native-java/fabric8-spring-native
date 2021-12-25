@@ -1,4 +1,4 @@
-package com.example.fabric8native.nativex;
+package io.kubernetesnativejava.fabric8.nativex;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -22,40 +22,35 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-
 /**
-	* Spring Native support for excellent Fabric8 Kubernetes client
-	*
-	* @author Josh Long
-	*/
+ * Spring Native support for excellent Fabric8 Kubernetes client
+ *
+ * @author Josh Long
+ */
 @Slf4j
-@NativeHint(options = {"-H:+AddAllCharsets", "--enable-https", "--enable-url-protocols=https"})
+@NativeHint(options = { "-H:+AddAllCharsets", "--enable-https", "--enable-url-protocols=https" })
 public class Fabric8NativeConfiguration implements NativeConfiguration {
 
 	private final Class<?> clazz = NamedCluster.class;
+
 	private final Reflections reflections = new Reflections(clazz.getPackageName(), clazz);
 
 	@Override
 	public void computeHints(NativeConfigurationRegistry registry, AotOptions aotOptions) {
 		var subtypesOfKubernetesResource = reflections.getSubTypesOf(KubernetesResource.class);
-		var othersToAddForReflection = List.of(
-			io.fabric8.kubernetes.internal.KubernetesDeserializer.class
-		);
+		var othersToAddForReflection = List.of(io.fabric8.kubernetes.internal.KubernetesDeserializer.class);
 		var combined = new HashSet<Class<?>>();
 		combined.addAll(subtypesOfKubernetesResource);
 		combined.addAll(othersToAddForReflection);
 		combined.addAll(reflections.getSubTypesOf(Doneable.class));
 		combined.addAll(resolveSerializationClasses(JsonSerialize.class));
 		combined.addAll(resolveSerializationClasses(JsonDeserialize.class));
-		combined
-			.stream()
-			.filter(Objects::nonNull)
-			.forEach(c -> {
-				if (log.isDebugEnabled()) {
-					log.debug("trying to register " + c.getName() + " for reflection");
-				}
-				registry.reflection().forType(c).withAccess(TypeAccess.values()).build();
-			});
+		combined.stream().filter(Objects::nonNull).forEach(c -> {
+			if (log.isDebugEnabled()) {
+				log.debug("trying to register " + c.getName() + " for reflection");
+			}
+			registry.reflection().forType(c).withAccess(TypeAccess.values()).build();
+		});
 	}
 
 	@SneakyThrows
@@ -78,8 +73,7 @@ public class Fabric8NativeConfiguration implements NativeConfiguration {
 				ReflectionUtils.rethrowRuntimeException(e);
 			}
 			return null;
-		})
-			.collect(Collectors.toSet());
+		}).collect(Collectors.toSet());
 	}
 
 }
