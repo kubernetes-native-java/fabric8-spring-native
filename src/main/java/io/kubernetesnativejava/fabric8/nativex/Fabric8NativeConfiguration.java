@@ -23,13 +23,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Spring Native support for excellent <a href="https://fabric8.io/"> Fabric8 Kubernetes
- * client</a>.
- *
- * @author Josh Long
- */
+	* Spring Native support for excellent <a href="https://fabric8.io/"> Fabric8 Kubernetes
+	* client</a>.
+	*
+	* @author Josh Long
+	*/
 @Slf4j
-@NativeHint(options = { "-H:+AddAllCharsets", "--enable-https", "--enable-url-protocols=https" })
+@NativeHint(options = {"-H:+AddAllCharsets", "--enable-https", "--enable-url-protocols=https"})
 public class Fabric8NativeConfiguration implements NativeConfiguration {
 
 	private final Class<?> clazz = NamedCluster.class;
