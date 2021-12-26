@@ -82,7 +82,6 @@
             </url>
         </pluginRepository>
     </pluginRepositories>
-
     <build>
         <plugins>
             <plugin>
