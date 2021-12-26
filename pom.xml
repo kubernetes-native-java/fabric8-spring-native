@@ -119,7 +119,7 @@
                                 <buildNumber>{{GITHUB_RUN_ID}}
                                 </buildNumber>
                                 <buildUrl>
-                                    http://travis-ci.org/{{GITHUB_REPOSITORY}}/builds/{{GITHUB_RUN_ID}}
+                                    http://github.com/{{GITHUB_REPOSITORY}}/runs/{{GITHUB_RUN_ID}}
                                 </buildUrl>
                                 <principal>{{USER}}</principal>
                                 <vcsRevision>{{GITHUB_SHA}}</vcsRevision>
