@@ -47,8 +47,8 @@ public class Fabric8NativeConfiguration implements NativeConfiguration {
 		combined.addAll(resolveSerializationClasses(JsonSerialize.class));
 		combined.addAll(resolveSerializationClasses(JsonDeserialize.class));
 		combined.stream().filter(Objects::nonNull).forEach(c -> {
-			if (log.isDebugEnabled()) {
-				log.debug("trying to register " + c.getName() + " for reflection");
+			if (log.isInfoEnabled()) {
+				log.info("trying to register " + c.getName() + " for reflection");
 			}
 			registry.reflection().forType(c).withAccess(TypeAccess.values()).build();
 		});
@@ -59,8 +59,8 @@ public class Fabric8NativeConfiguration implements NativeConfiguration {
 		var method = annotationClazz.getMethod("using");
 		var classes = this.reflections.getTypesAnnotatedWith(annotationClazz);
 		return classes.stream().map(clazzWithAnnotation -> {
-			if (log.isDebugEnabled()) {
-				log.debug("found " + clazzWithAnnotation.getName() + " : " + annotationClazz.getName());
+			if (log.isInfoEnabled()) {
+				log.info("found " + clazzWithAnnotation.getName() + " : " + annotationClazz.getName());
 			}
 			var annotation = clazzWithAnnotation.getAnnotation(annotationClazz);
 			try {
