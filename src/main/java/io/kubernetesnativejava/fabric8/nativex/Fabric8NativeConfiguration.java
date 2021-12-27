@@ -2,7 +2,6 @@ package io.kubernetesnativejava.fabric8.nativex;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.NamedCluster;
 import lombok.SneakyThrows;
@@ -43,7 +42,7 @@ public class Fabric8NativeConfiguration implements NativeConfiguration {
 		var combined = new HashSet<Class<?>>();
 		combined.addAll(subtypesOfKubernetesResource);
 		combined.addAll(othersToAddForReflection);
-		combined.addAll(reflections.getSubTypesOf(Doneable.class));
+		// combined.addAll(reflections.getSubTypesOf(Doneable .class));
 		combined.addAll(resolveSerializationClasses(JsonSerialize.class));
 		combined.addAll(resolveSerializationClasses(JsonDeserialize.class));
 		combined.stream().filter(Objects::nonNull).forEach(c -> {
