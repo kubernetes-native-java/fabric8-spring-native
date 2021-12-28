@@ -3,11 +3,13 @@ package io.kubernetesnativejava.fabric8.nativex;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
-import io.fabric8.kubernetes.api.model.NamedCluster;
+import io.fabric8.kubernetes.client.Client;
+import io.fabric8.kubernetes.client.ExtensionAdapter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.reflections.Reflections;
 import org.springframework.aot.context.bootstrap.generator.infrastructure.nativex.NativeConfigurationRegistry;
+import org.springframework.core.GenericTypeResolver;
 import org.springframework.nativex.AotOptions;
 import org.springframework.nativex.hint.NativeHint;
 import org.springframework.nativex.hint.TypeAccess;
@@ -15,10 +17,9 @@ import org.springframework.nativex.type.NativeConfiguration;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -31,20 +32,22 @@ import java.util.stream.Collectors;
 @NativeHint(options = { "-H:+AddAllCharsets", "--enable-https", "--enable-url-protocols=https" })
 public class Fabric8NativeConfiguration implements NativeConfiguration {
 
-	private final Class<?> clazz = NamedCluster.class;
-
-	private final Reflections reflections = new Reflections(clazz.getPackageName(), clazz);
+	private final Reflections reflections = new Reflections("io.fabric8");
 
 	@Override
 	public void computeHints(NativeConfigurationRegistry registry, AotOptions aotOptions) {
+
+		log.info("running " + Fabric8NativeConfiguration.class.getName());
 		var subtypesOfKubernetesResource = reflections.getSubTypesOf(KubernetesResource.class);
 		var othersToAddForReflection = List.of(io.fabric8.kubernetes.internal.KubernetesDeserializer.class);
+		var clients = this.reflections.getSubTypesOf(Client.class);
 		var combined = new HashSet<Class<?>>();
 		combined.addAll(subtypesOfKubernetesResource);
 		combined.addAll(othersToAddForReflection);
-		// combined.addAll(reflections.getSubTypesOf(Doneable .class));
-		combined.addAll(resolveSerializationClasses(JsonSerialize.class));
-		combined.addAll(resolveSerializationClasses(JsonDeserialize.class));
+		combined.addAll(registerExtensionAdapters());
+		combined.addAll(clients);
+		combined.addAll(this.resolveSerializationClasses(JsonSerialize.class));
+		combined.addAll(this.resolveSerializationClasses(JsonDeserialize.class));
 		combined.stream().filter(Objects::nonNull).forEach(c -> {
 			if (log.isInfoEnabled()) {
 				log.info("trying to register " + c.getName() + " for reflection");
@@ -53,8 +56,31 @@ public class Fabric8NativeConfiguration implements NativeConfiguration {
 		});
 	}
 
+	private Set<Class<?>> registerExtensionAdapters() {
+		Set<Class<? extends ExtensionAdapter>> subTypesOf = this.reflections.getSubTypesOf(ExtensionAdapter.class);
+
+		Set<Class<?>> classes = new HashSet<>();
+
+		for (var c : subTypesOf) {
+			classes.add(c);
+			Map<TypeVariable, Type> typeVariableMap = GenericTypeResolver.getTypeVariableMap(c);
+			typeVariableMap.forEach((tv, clazz) -> {
+				log.info("trying to register " + clazz.getTypeName() + '.');
+				try {
+					classes.add(Class.forName(clazz.getTypeName()));
+				}
+				catch (ClassNotFoundException e) {
+					ReflectionUtils.rethrowRuntimeException(e);
+				}
+
+			});
+		}
+		return classes;
+	}
+
 	@SneakyThrows
 	private <R extends Annotation> Set<Class<?>> resolveSerializationClasses(Class<R> annotationClazz) {
+		log.info("trying to resolve types annotated with " + annotationClazz.getName());
 		var method = annotationClazz.getMethod("using");
 		var classes = this.reflections.getTypesAnnotatedWith(annotationClazz);
 		return classes.stream().map(clazzWithAnnotation -> {
