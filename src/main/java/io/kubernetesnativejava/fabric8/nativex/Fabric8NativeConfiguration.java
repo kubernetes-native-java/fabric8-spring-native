@@ -8,6 +8,8 @@ import io.fabric8.kubernetes.client.ExtensionAdapter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
 import org.springframework.aot.context.bootstrap.generator.infrastructure.nativex.NativeConfigurationRegistry;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.nativex.AotOptions;
@@ -20,6 +22,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -32,12 +35,19 @@ import java.util.stream.Collectors;
 @NativeHint(options = { "-H:+AddAllCharsets", "--enable-https", "--enable-url-protocols=https" })
 public class Fabric8NativeConfiguration implements NativeConfiguration {
 
-	private final Reflections reflections = new Reflections("io.fabric8");
+	private final Reflections reflections = new Reflections("io.fabric8", new TypeAnnotationsScanner(),
+			new SubTypesScanner(false));
+
+	@SneakyThrows
+	Class<?> forName(String name) {
+		return Class.forName(name);
+	}
 
 	@Override
 	public void computeHints(NativeConfigurationRegistry registry, AotOptions aotOptions) {
-
 		log.info("running " + Fabric8NativeConfiguration.class.getName());
+		var impls = reflections.getAllTypes().stream().filter(cname -> cname.endsWith("Impl")) //
+				.map((Function<String, Class<?>>) this::forName).collect(Collectors.toSet());
 		var subtypesOfKubernetesResource = reflections.getSubTypesOf(KubernetesResource.class);
 		var othersToAddForReflection = List.of(io.fabric8.kubernetes.internal.KubernetesDeserializer.class);
 		var clients = this.reflections.getSubTypesOf(Client.class);
@@ -45,6 +55,7 @@ public class Fabric8NativeConfiguration implements NativeConfiguration {
 		combined.addAll(subtypesOfKubernetesResource);
 		combined.addAll(othersToAddForReflection);
 		combined.addAll(registerExtensionAdapters());
+		combined.addAll(impls);
 		combined.addAll(clients);
 		combined.addAll(this.resolveSerializationClasses(JsonSerialize.class));
 		combined.addAll(this.resolveSerializationClasses(JsonDeserialize.class));
